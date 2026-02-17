@@ -1,0 +1,58 @@
+/*
+=============================================================
+Create Database and Schemas
+=============================================================
+Script Purpose:
+    This script creates a new database named 'igpost' after checking if it already exists. 
+    If the database exists, it is dropped and recreated. Also, this script sets up two schemas:'staging' and 'production'.
+	
+WARNING:
+    Running this script will drop the entire 'igpost' database if it exists. 
+    All data in the database will be permanently deleted. Proceed with caution 
+    and ensure you have proper backups before running this script.
+*/
+
+-- Drop and recreate the 'igpost' database --
+DROP DATABASE IF EXISTS igpost;
+CREATE DATABASE igpost;
+
+-- Create schemas --
+create schema staging;
+create schema production;
+
+-- create table --
+drop table if exists staging.ig_analytics;
+create table staging.ig_analytics(
+	post_id text PRIMARY KEY,
+	account_id int,
+	account_type text,
+	follower_count int,
+	media_type text,
+	content_category text,
+	traffic_source text,
+	has_call_to_action text,
+	post_datetime timestamptz,
+	post_date date,
+	post_hour int,
+	day_of_week text,
+	likes int,
+	comments_count int,
+	shares int,
+	saves int,
+	reach int,
+	impressions int, 
+	engagement_rate NUMERIC(5, 4),
+	followers_gained int,
+	caption_length int,
+	hashtags_count int,
+	performance_bucket_label text
+);
+
+-- load scripts -- 
+copy staging.ig_analytics
+	from '/private/tmp/Instagram_Analytics_nov24_nov25.csv'
+	with ( 
+	    header true, 
+	    delimiter ',', 
+	    null ''
+	);
