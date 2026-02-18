@@ -1,0 +1,36 @@
+/*
+==================================================
+Data Quality Check
+==================================================
+This script is used for checking following information:
+- Nulls and duplicates 
+- Unwanted space
+==================================================
+*/
+
+-- check for nulls or duplicates in primary key --
+
+select post_id,
+	count(*)
+	from staging.ig_analytics
+	group by post_id
+	having count(*) > 1 or post_id is null
+
+-- check nulls for crucial categories --
+
+select *
+	from staging.ig_analytics
+	where post_datetime is null 
+	   or account_id is null;
+
+-- check for unwanted space -- 
+
+select post_id, account_type, media_type,
+	content_category,traffic_source,performance_bucket_label
+from staging.ig_analytics
+where post_id != trim(post_id)
+   or account_type != trim(account_type)
+   or media_type != trim(media_type)
+   or content_category != trim(content_category)
+   or traffic_source != trim(traffic_source)
+   or performance_bucket_label != trim(performance_bucket_label);
