@@ -121,7 +121,7 @@ select
     trim(traffic_source),
 	case 
     when trim(has_call_to_action) = '1' then True
-    when trim(has_call_to_action) = '0' then FALSE
+    when trim(has_call_to_action) = '0' then False
     else null 
 	end as has_call_to_action,
     post_datetime, 
