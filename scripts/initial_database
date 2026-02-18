@@ -56,3 +56,90 @@ copy staging.ig_analytics
 	    delimiter ',', 
 	    null ''
 	);
+
+-- create production table -- 
+drop table if exists production.ig_analytics;
+create table production.ig_analytics (
+    post_id text primary key,
+	account_id int,
+	account_type text,
+	follower_count int DEFAULT 0,
+	media_type text,
+	content_category text,
+	traffic_source text,
+    has_call_to_action boolean,
+    post_datetime timestamptz,
+	post_date date,
+    post_hour int,
+	day_of_week text,
+    likes int DEFAULT 0,
+    comments_count int DEFAULT 0,
+    shares int DEFAULT 0,
+    saves int DEFAULT 0,
+    reach int DEFAULT 0,
+    impressions int DEFAULT 0,
+    engagement_rate numeric(5, 4),
+    followers_gained int,
+    caption_length int,
+    hashtags_count int,
+    performance_bucket_label text
+);
+
+-- load scripts onto production layer -- 
+insert into production.ig_analytics (
+    post_id, 
+	account_id,
+	account_type, 
+	media_type, 
+	content_category, 
+	traffic_source,
+    has_call_to_action, 
+	post_datetime, 
+	post_date, 
+	post_hour, 
+	day_of_week,
+    likes, 
+	comments_count,
+	shares, 
+	saves,
+	reach, 
+	impressions, 
+	follower_count,
+    engagement_rate, 
+	followers_gained, 
+	caption_length, 
+	hashtags_count, 
+	performance_bucket_label
+)
+
+select
+    trim(post_id) as post_id,
+    account_id, 
+	trim(account_type), 
+    trim(media_type), 
+    trim(content_category), 
+    trim(traffic_source),
+	case 
+    when trim(has_call_to_action) = '1' then True
+    when trim(has_call_to_action) = '0' then FALSE
+    else null 
+	end as has_call_to_action,
+    post_datetime, 
+	post_date, 
+	post_hour,
+	day_of_week,
+    coalesce(likes, 0),
+    coalesce(comments_count, 0),
+    coalesce(shares, 0),
+    coalesce(saves, 0),
+    coalesce(reach, 0),
+    coalesce(impressions, 0),
+    coalesce(follower_count, 0),
+    engagement_rate,
+    followers_gained,
+    caption_length,
+    hashtags_count,
+    trim(performance_bucket_label)
+
+from staging.ig_analytics
+where post_id IS NOT NULL;
