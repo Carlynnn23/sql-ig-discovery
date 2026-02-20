@@ -1,0 +1,117 @@
+/*
+=============================================================
+Start Exploratory Data Analysis
+=============================================================
+Script Purpose:
+    This script performs EDA after cleaning the data and procedure starts on 'production' layer.
+    The analysis contains dimension, date, measure explorations,and magnitude and rank analysis.
+*/
+
+-- dimensions exploration -- 
+select distinct account_type
+from production.ig_analytics;
+
+select distinct media_type
+from production.ig_analytics;
+
+select distinct content_category
+from production.ig_analytics;
+
+select distinct traffic_source
+from production.ig_analytics;
+
+select distinct performance_bucket_label
+from production.ig_analytics;
+
+-- date exploration -- 
+-- duration -- 
+select 
+	min(post_date) as first_post_date,
+	max(post_date) as last_post_date,
+	max(post_date) - min(post_date) as day_diff
+from production.ig_analytics;
+
+-- post frequency --
+select 
+	account_id,
+	post_id,
+	post_datetime,
+	lag(post_datetime)over(
+	partition by account_id
+	order by post_datetime asc) 
+	as previous_post_datetime,
+	post_datetime - lag(post_datetime)over(
+	partition by account_id
+	order by post_datetime asc) as time_diff_btw_posts
+from production.ig_analytics
+order by account_id, post_datetime asc;
+
+-- measure exploration -- 
+-- save rate --
+select 
+     round(
+     (saves::numeric/ nullif(reach, 0)) * 100, 2) as save_rate
+from production.ig_analytics
+
+-- watch frequency --
+select
+	    round(
+     (reach::numeric / nullif(impressions, 0)), 2) as watch frequency
+from production.ig_analytics
+
+-- follower conversion rate --
+select 
+    media_type,
+	  round(
+	  (followers_gained::numeric/nullif(reach,0)), 2) as follower_conver_rate
+from production.ig_analytics
+order by follower_conver_rate desc
+
+-- average weighted interaction --
+select 
+	media_type,
+	content_category,
+	count(*) as post_count,
+	round(avg((likes * 1) + (comments_count * 2) + (shares * 3) + (saves * 4)),0)
+	as avg_weighted_enagagement
+from production.ig_analytics
+group by media_type, content_category
+order by avg_weighted_enagagement desc;
+
+-- trend for successful content --
+select
+    date_trunc('month', post_date) as month,
+    media_type,
+    round(
+	avg(reach::numeric / nullif(follower_count, 0)), 2) as discovery_ratio
+from production.ig_analytics
+group by month, media_type
+order by month desc, discovery_ratio desc;
+
+-- magnitude exploration -- 
+select
+    traffic_source,
+    sum(reach) as total_reach_magnitude,
+    count(post_id) as total_posts,
+    round(SUM(reach) * 100 / sum(sum(reach)) over(), 2) as discovery_volume
+from production.ig_analytics
+group by traffic_source
+order by total_reach_magnitude desc;
+
+-- rank analysis --
+-- Top 3 by category -- 
+with content_ranking as (
+    select 
+        media_type,
+        post_id,
+        (likes + comments_count + shares + saves) as total_interactions,
+        rank() over (
+            partition by media_type 
+            order by (likes + comments_count + shares + saves) desc
+        ) as category_rank
+    from production.ig_analytics
+     )
+select * 
+from content_ranking 
+where category_rank <= 3;
+
