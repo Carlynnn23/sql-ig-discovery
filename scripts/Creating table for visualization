@@ -1,0 +1,36 @@
+/*
+=============================================================
+Create New Reporting table in preparation for data visualization
+=============================================================
+Script Purpose:
+    This script creates a new schema and table named 'reporting' after checking if it already exists. 
+    The table is built on exsisting schema 'production' and new measures conducted throughout the process.
+*/
+
+-- loading table on reporting schema -- 
+create schema if not exists reporting;
+
+drop table if exists reporting.ig_analytics;
+
+create table reporting.ig_analytics as
+select
+    *, 
+    (likes + comments_count + shares + saves) as total_interactions,
+    (likes * 1) + (comments_count * 2) + (shares * 3) + (saves * 4) as weighted_engagement,
+    round((saves::numeric / nullif(reach, 0)) * 100, 2) as save_rate,
+    round((reach::numeric / nullif(impressions, 0)), 2) as watch_frequency,
+    round((followers_gained::numeric / nullif(reach, 0)) * 100, 4) as follower_conversion_rate,
+    round((reach::numeric / nullif(follower_count, 0)), 2) as discovery_ratio,
+    post_datetime - lag(post_datetime) over (
+        partition by account_id 
+        order by post_datetime asc
+    ) as time_diff_btw_posts,
+	-- Label ranks for Power BI -- 
+    case 
+        when performance_bucket_label = 'low' then 1
+        when performance_bucket_label = 'medium' then 2
+        when performance_bucket_label = 'high' then 3
+		when performance_bucket_label = 'viral' then 4
+        else 0 
+    end as performance_sort_order
+from production.ig_analytics;
