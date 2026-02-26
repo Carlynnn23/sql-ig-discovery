@@ -21,10 +21,12 @@ select
     round((reach::numeric / nullif(impressions, 0)), 2) as watch_frequency,
     round((followers_gained::numeric / nullif(reach, 0)) * 100, 4) as follower_conversion_rate,
     round((reach::numeric / nullif(follower_count, 0)), 2) as discovery_ratio,
-    post_datetime - lag(post_datetime) over (
-        partition by account_id 
-        order by post_datetime asc
-    ) as time_diff_btw_posts,
+    round(
+         (extract(epoch from(
+            post_datetime - lag(post_datetime) over (
+                partition by account_id 
+                order by post_datetime asc)
+        )) / 3600)::numeric, 2) as hours_diff_btw_posts,
 	-- Label ranks for Power BI -- 
     case 
         when performance_bucket_label = 'low' then 1
