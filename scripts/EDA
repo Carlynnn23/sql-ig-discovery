@@ -40,9 +40,12 @@ select
 	partition by account_id
 	order by post_datetime asc) 
 	as previous_post_datetime,
-	post_datetime - lag(post_datetime)over(
-	partition by account_id
-	order by post_datetime asc) as time_diff_btw_posts
+	round(
+         (extract(epoch from(
+            post_datetime - lag(post_datetime) over (
+                partition by account_id 
+                order by post_datetime asc)
+        )) / 3600)::numeric, 2) as hours_diff_btw_posts
 from production.ig_analytics
 order by account_id, post_datetime asc;
 
