@@ -1,8 +1,10 @@
-Project Overview
+Project Overview:
+
 This project aims to analyze the performance of 20 Instagram accounts by examining their post types (images, reels, carousels) over a one-year period (November 2024 – November 2025). The data has been meticulously cleaned and analyzed using PostgreSQL, which involved removing null values and blank spaces. Exploratory Data Analysis (EDA) was conducted, focusing on date and engagement metrics, resulting in the generation of new metrics such as post frequency and average weighted interactions for a Power BI data visualization report.
 
 Key Insights from the Visualization Report:
 ![social media insight_power bi](https://github.com/user-attachments/assets/b5c0959d-8b75-4551-b0c0-87908820157e)
+
 1. Optimal Posting Times: Maximizing Engagement (Heatmap)
    Analysis of engagement rates reveals that the ideal time to post is Tuesday at 2 AM (UTC), while the least effective times are Monday at 3 PM and 6 PM (UTC).
    
